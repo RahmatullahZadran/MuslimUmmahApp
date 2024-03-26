@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import SurahDetailScreen from './SurahDetailScreen';
 
 const Quran = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -32,9 +31,17 @@ const Quran = () => {
     };
   }, []);
 
-  const handleSurahPress = (surah) => {
-    navigation.navigate('SurahDetailScreen', { surah });
-    console.log('More information about Surah:', surah);
+  const handleSurahPress = async (surah) => {
+    try {
+      const response = await fetch(`https://api.alquran.cloud/v1/surah/${surah.number}/ar.alafasy`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      navigation.navigate('SurahDetailScreen', { surah: data.data });
+    } catch (error) {
+      console.error('Error fetching Surah details:', error);
+    }
   };
 
   return (

@@ -12,6 +12,8 @@ const Homescreen = () => {
     navigation.navigate(screenName);
   };
 
+  
+
   return (
     <View style={styles.container}>
       <Text style={styles.headerText}>Muslim Ummah App</Text>
@@ -114,7 +116,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 0,
     backgroundColor: 'black',
     color: 'white',
     padding: 10,
@@ -165,7 +167,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabText: {
-    fontSize: 18,
+    fontSize: 25,
   },
   selectedTab: {
     borderBottomWidth: 2,
