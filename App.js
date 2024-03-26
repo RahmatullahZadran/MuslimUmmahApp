@@ -7,6 +7,7 @@ import DhuhrScreen from './components/navbar/DhuhrScreen';
 import AsrScreen from './components/navbar/AsrScreen';
 import MaghribScreen from './components/navbar/MaghribScreen';
 import IshaScreen from './components/navbar/IshaScreen';
+import SurahDetailScreen from './components/Quran/SurahDetailScreen';
 
 
 
@@ -25,7 +26,10 @@ const App = () => {
         <Stack.Screen name="AsrScreen" component={AsrScreen} />
         <Stack.Screen name="MaghribScreen" component={MaghribScreen} />
         <Stack.Screen name="IshaScreen" component={IshaScreen} />
+        <Stack.Screen name="SurahDetailScreen" component={SurahDetailScreen} />
       </Stack.Navigator>
+
+      
     
     </NavigationContainer>
   );

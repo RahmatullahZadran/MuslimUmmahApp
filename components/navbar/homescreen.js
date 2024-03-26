@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet, ImageBackground, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+// import Qibla from '../qibla/Qibla';
+import Quran from '../Quran/quran';
 
 const Homescreen = () => {
+  const [selectedTab, setSelectedTab] = useState('Prayer'); // Default tab is 'Prayer'
   const navigation = useNavigation();
 
   const handleNavigation = (screenName) => {
@@ -10,54 +13,120 @@ const Homescreen = () => {
   };
 
   return (
-    <>
+    <View style={styles.container}>
       <Text style={styles.headerText}>Muslim Ummah App</Text>
-      
-      <ImageBackground
-        source={require('../../pic/khaba.jpg')} 
-        style={styles.container}
-      >
-        <TouchableOpacity style={styles.option} onPress={() => handleNavigation('FajrScreen')}>
-          <Text style={styles.optionText}>Fajr/Morning</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.option} onPress={() => handleNavigation('DhuhrScreen')}>
-          <Text style={styles.optionText}>Dhuhr/Afternoon</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.option} onPress={() => handleNavigation('AsrScreen')}>
-          <Text style={styles.optionText}>Asr/Evening</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.option} onPress={() => handleNavigation('MaghribScreen')}>
-          <Text style={styles.optionText}>Maghrib/Sunset Prayer</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.option} onPress={() => handleNavigation('IshaScreen')}>
-          <Text style={styles.optionText}>Isha/Night</Text>
-        </TouchableOpacity>
-      </ImageBackground>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.footerOption} onPress={() => handleNavigation('Option1Screen')}>
-          <Text style={styles.footerOptionText}>Prayer</Text>
+      {/* Content section */}
+      <View style={styles.contentContainer}>
+        {/* Prayer section */}
+        {selectedTab === 'Prayer' && (
+          <ImageBackground
+            // source={require('../../pic/prayer_bg.jpg')}
+            style={styles.backgroundImage}
+            resizeMode="cover"
+          >
+            <View style={styles.section}>
+              <Text style={styles.sectionText}>Prayer Section</Text>
+              <TouchableOpacity style={styles.option} onPress={() => handleNavigation('FajrScreen')}>
+                <Text style={styles.optionText}>Fajr/Morning</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.option} onPress={() => handleNavigation('DhuhrScreen')}>
+                <Text style={styles.optionText}>Dhuhr/Afternoon</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.option} onPress={() => handleNavigation('AsrScreen')}>
+                <Text style={styles.optionText}>Asr/Evening</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.option} onPress={() => handleNavigation('MaghribScreen')}>
+                <Text style={styles.optionText}>Maghrib/Sunset Prayer</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.option} onPress={() => handleNavigation('IshaScreen')}>
+                <Text style={styles.optionText}>Isha/Night</Text>
+              </TouchableOpacity>
+            </View>
+          </ImageBackground>
+        )}
+
+        {/* Qibla section */}
+        {selectedTab === 'Quran' && (
+          <ImageBackground
+            // source={require('../../pic/components/navbar/')}
+            style={styles.backgroundImage}
+            resizeMode="cover"
+          >
+            <View style={styles.section}>
+              <Text style={styles.sectionText}>Quran Section</Text>
+              <Quran />
+              
+            </View>
+          </ImageBackground>
+        )}
+
+        {/* Quran section */}
+        {selectedTab === 'Qibla' && (
+          <ImageBackground
+            // source={require('../../pic/quran_bg.jpg')}
+            style={styles.backgroundImage}
+            resizeMode="cover"
+          >
+            <View style={styles.section}>
+              <Text style={styles.sectionText}>Quran Section</Text>
+              
+            </View>
+          </ImageBackground>
+        )}
+      </View>
+
+      {/* Tab bar */}
+      <View style={styles.tabBar}>
+        {/* Prayer tab */}
+        <TouchableOpacity
+          style={[styles.tab, selectedTab === 'Prayer' && styles.selectedTab]}
+          onPress={() => setSelectedTab('Prayer')}
+        >
+          <Text style={styles.tabText}>Prayer</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerOption} onPress={() => handleNavigation('Option2Screen')}>
-          <Text style={styles.footerOptionText}>Progress</Text>
+
+        {/* Qibla tab */}
+        <TouchableOpacity
+          style={[styles.tab, selectedTab === 'Quran' && styles.selectedTab]}
+          onPress={() => setSelectedTab('Quran')}
+        >
+          <Text style={styles.tabText}>Quran</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerOption} onPress={() => handleNavigation('Option3Screen')}>
-          <Text style={styles.footerOptionText}>Progress</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerOption} onPress={() => handleNavigation('Option4Screen')}>
-          <Text style={styles.footerOptionText}>Progress</Text>
+
+        {/* Quran tab */}
+        <TouchableOpacity
+          style={[styles.tab, selectedTab === 'Qibla' && styles.selectedTab]}
+          onPress={() => setSelectedTab('Qibla')}
+        >
+          <Text style={styles.tabText}>Qibla</Text>
         </TouchableOpacity>
       </View>
-    </>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
+    backgroundColor: 'black',
+    color: 'white',
+    padding: 10,
+  },
+  contentContainer: {
+    flex: 1,
+  },
+  backgroundImage: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    resizeMode: 'cover', 
+    resizeMode: 'cover',
   },
   option: {
     padding: 40,
@@ -75,37 +144,32 @@ const styles = StyleSheet.create({
     color: 'black',
     textAlign: 'center',
   },
-  headerText: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: 'black',
-    textAlign: 'center',
-    backgroundColor: 'black',
-    color: 'white',
-    padding: 10,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 10,
-    backgroundColor: 'black',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'black',
-  },
-  footerOption: {
+  section: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    fontStyle: 'normal',
-  
   },
-  footerOptionText: {
-    fontSize: 16,
+  sectionText: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
-    
+  },
+  tabBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+  },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  tabText: {
+    fontSize: 18,
+  },
+  selectedTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: 'blue',
   },
 });
 
