@@ -9,6 +9,9 @@ import MaghribScreen from './components/navbar/MaghribScreen';
 import IshaScreen from './components/navbar/IshaScreen';
 import SurahDetailScreen from './components/Quran/SurahDetailScreen';
 import { AntDesign } from '@expo/vector-icons';
+import CreatePostScreen from './components/Home/CreatePost';
+import ProfileScreen from './components/Home/ProfileScreen';
+import MessageScreen from './components/Home/MessageScreen';
 
 const Stack = createStackNavigator();
 
@@ -22,6 +25,14 @@ const App = () => {
         <Stack.Screen name="AsrScreen" component={AsrScreen} options={{ title: 'Asr Screen' }} />
         <Stack.Screen name="MaghribScreen" component={MaghribScreen} options={{ title: 'Maghrib Screen' }} />
         <Stack.Screen name="IshaScreen" component={IshaScreen} options={{ title: 'Isha Screen' }} />
+        <Stack.Screen name="home" component={IshaScreen} options={{ title: 'Isha Screen' }} />
+
+        <Stack.Screen name="CreatePostScreen" component={CreatePostScreen} options={{ title: 'Create Post' }} />
+        <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{ title: 'Profile' }} />
+        <Stack.Screen name="MessageScreen" component={MessageScreen} options={{ title: 'Messages' }} />
+
+     
+
         <Stack.Screen
           name="SurahDetailScreen"
           component={SurahDetailScreen}
@@ -51,5 +62,7 @@ const App = () => {
     </NavigationContainer>
   );
 };
+
+
 
 export default App;

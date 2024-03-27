@@ -52,7 +52,7 @@ const Quran = () => {
         <Text style={styles.text}>Error: {error.message}</Text>
       ) : (
         <>
-          <Text style={styles.header}>List of Surahs </Text>
+          <Text style={styles.header}>Surahs</Text>
           <ScrollView style={styles.scrollView}>
             <View style={styles.surahsContainer}>
               {surahs.map((surah) => (

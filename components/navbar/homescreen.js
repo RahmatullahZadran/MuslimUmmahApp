@@ -3,9 +3,11 @@ import { TouchableOpacity, Text, StyleSheet, ImageBackground, View } from 'react
 import { useNavigation } from '@react-navigation/native';
 // import Qibla from '../qibla/Qibla';
 import Quran from '../Quran/quran';
+import Home from '../Home/Home';
+
 
 const Homescreen = () => {
-  const [selectedTab, setSelectedTab] = useState('Prayer'); // Default tab is 'Prayer'
+  const [selectedTab, setSelectedTab] = useState('Home'); // Default tab is 'Prayer'
   const navigation = useNavigation();
 
   const handleNavigation = (screenName) => {
@@ -48,6 +50,22 @@ const Homescreen = () => {
           </ImageBackground>
         )}
 
+{selectedTab === 'Home' && (
+          <ImageBackground
+            // source={require('../../pic/quran_bg.jpg')}
+            style={styles.backgroundImage}
+            resizeMode="cover"
+          >
+            <View style={styles.section}>
+             
+              <Home />
+              
+            </View>
+          </ImageBackground>
+        )}
+
+
+
         {/* Qibla section */}
         {selectedTab === 'Quran' && (
           <ImageBackground
@@ -56,22 +74,25 @@ const Homescreen = () => {
             resizeMode="cover"
           >
             <View style={styles.section}>
-              <Text style={styles.sectionText}>Quran Section</Text>
+              <Text style={styles.sectionText}>Surahs</Text>
               <Quran />
               
             </View>
           </ImageBackground>
         )}
 
-        {/* Quran section */}
-        {selectedTab === 'Qibla' && (
+   
+        
+
+
+            {selectedTab === 'Home' && (
           <ImageBackground
             // source={require('../../pic/quran_bg.jpg')}
             style={styles.backgroundImage}
             resizeMode="cover"
           >
             <View style={styles.section}>
-              <Text style={styles.sectionText}>Quran Section</Text>
+              <Text style={styles.sectionText}></Text>
               
             </View>
           </ImageBackground>
@@ -80,6 +101,13 @@ const Homescreen = () => {
 
       {/* Tab bar */}
       <View style={styles.tabBar}>
+
+      <TouchableOpacity
+          style={[styles.tab, selectedTab === 'Home' && styles.selectedTab]}
+          onPress={() => setSelectedTab('Home')}
+        >
+          <Text style={styles.tabText}> Home</Text>
+        </TouchableOpacity>
         {/* Prayer tab */}
         <TouchableOpacity
           style={[styles.tab, selectedTab === 'Prayer' && styles.selectedTab]}
@@ -103,6 +131,7 @@ const Homescreen = () => {
         >
           <Text style={styles.tabText}>Qibla</Text>
         </TouchableOpacity>
+
       </View>
     </View>
   );
@@ -125,11 +154,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backgroundImage: {
-    flex: 1,
+    flex: 1, 
+    resizeMode: 'cover',
     justifyContent: 'center',
     alignItems: 'center',
-    resizeMode: 'cover',
-  },
+    width: '100%',
+},
+
   option: {
     padding: 40,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
