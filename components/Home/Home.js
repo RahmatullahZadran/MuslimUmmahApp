@@ -34,8 +34,9 @@ const postsData = [
     id: '4',
     username: 'Username4',
     likes: 150,
-    caption: 'Caption goes here 2',
-    imageUrl: 'https://via.placeholder.com/400',
+    Title: 'Caption goes here 2',
+    Content : 'Caption goes here 2',
+    
   },
   // Add more post data as needed
 ];
@@ -46,27 +47,18 @@ const Home = () => {
     const navigation = useNavigation();
   const renderItem = ({ item }) => (
     <View style={styles.postContainer}>
-  <Text style={styles.title}>{item.title}</Text> 
-  <View style={styles.contentContainer}>
-    <View style={styles.postHeader}>
-      <Image
-        source={{ uri: 'https://via.placeholder.com/50' }}
-        style={styles.avatar}
-      />
-      <Text style={styles.username}>{item.username}</Text>
-    </View>
-    <Image
-      source={{ uri: item.imageUrl }}
-      style={styles.postImage}
-    />
-    <View style={styles.postFooter}>
-      <Text style={styles.likes}>Likes: {item.likes}</Text>
-      <Text style={styles.caption}>{item.caption}</Text>
+    <View style={styles.contentContainer}>
+      <Text style={styles.title}>{item.title}</Text>
+      <Text style={styles.content}>{item.content}</Text>
+      {item.imageUrl && (
+        <Image
+          source={{ uri: item.imageUrl }}
+          style={styles.postImage}
+        />
+      )}
     </View>
   </View>
-</View>
-
-  );
+);
 
   
     return (
