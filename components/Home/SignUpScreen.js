@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore'; // Import Firestore modules
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const auth = getAuth();
+const db = getFirestore(); // Initialize Firestore
 
 const SignUpScreen = () => {
   const navigation = useNavigation();
@@ -24,9 +27,24 @@ const SignUpScreen = () => {
     }
 
     createUserWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        // Registration successful, navigate to profile screen or any other screen you want
-        navigation.navigate('SignInScreen');
+      .then((userCredential) => {
+        const user = userCredential.user;
+
+        // Create user profile document in Firestore
+        const userProfileRef = doc(db, 'users', user.uid);
+        setDoc(userProfileRef, {
+          username: username,
+          email: email,
+          // Add other profile information here if needed
+        }).then(() => {
+          // Registration and profile creation successful, navigate to SignInScreen
+          navigation.navigate('SignInScreen');
+
+          // Remove any stored credentials if user signs up (optional)
+          AsyncStorage.removeItem('userCredentials');
+        }).catch((error) => {
+          setError(error.message);
+        });
       })
       .catch(error => {
         setError(error.message);

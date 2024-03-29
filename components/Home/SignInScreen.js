@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Switch } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage from the correct package
 
 const auth = getAuth();
 
@@ -10,12 +11,30 @@ const SignInScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [keepLoggedIn, setKeepLoggedIn] = useState(false); // New state for "Keep Me Logged In"
+
+  useEffect(() => {
+    AsyncStorage.getItem('userCredentials').then((credentials) => {
+      if (credentials) {
+        const { email, password, keepLoggedIn } = JSON.parse(credentials);
+        setEmail(email);
+        setPassword(password);
+        setRememberMe(true);
+        setKeepLoggedIn(keepLoggedIn); // Set the state of "Keep Me Logged In" from AsyncStorage
+      }
+    });
+  }, []);
 
   const handleSignIn = () => {
     signInWithEmailAndPassword(auth, email, password)
       .then(() => {
-        // Sign-in successful, navigate to profile screen
         navigation.navigate('ProfileScreen');
+        if (rememberMe && keepLoggedIn) { // Store credentials if both "Remember Me" and "Keep Me Logged In" are enabled
+          AsyncStorage.setItem('userCredentials', JSON.stringify({ email, password, keepLoggedIn }));
+        } else {
+          AsyncStorage.removeItem('userCredentials');
+        }
       })
       .catch(error => {
         setError(error.message);
@@ -23,20 +42,8 @@ const SignInScreen = () => {
   };
 
   const handleSignUp = () => {
-    // Navigate to SignUpScreen
     navigation.navigate('SignUpScreen');
   };
-
-  useEffect(() => {
-    // Check if user is already signed in
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      if (user) {
-        // User is signed in, navigate to profile screen
-        navigation.navigate('ProfileScreen');
-      }
-    });
-    return unsubscribe;
-  }, []);
 
   return (
     <View style={styles.container}>
@@ -55,6 +62,26 @@ const SignInScreen = () => {
         value={password}
         onChangeText={setPassword}
       />
+      <View style={styles.checkboxContainer}>
+        <Switch
+          trackColor={{ false: "#767577", true: "#81b0ff" }}
+          thumbColor={rememberMe ? "#f5dd4b" : "#f4f3f4"}
+          ios_backgroundColor="#3e3e3e"
+          onValueChange={setRememberMe}
+          value={rememberMe}
+        />
+        <Text style={styles.label}>Remember Me</Text>
+      </View>
+      <View style={styles.checkboxContainer}>
+        <Switch
+          trackColor={{ false: "#767577", true: "#81b0ff" }}
+          thumbColor={keepLoggedIn ? "#f5dd4b" : "#f4f3f4"}
+          ios_backgroundColor="#3e3e3e"
+          onValueChange={setKeepLoggedIn}
+          value={keepLoggedIn}
+        />
+        <Text style={styles.label}>Keep Me Logged In</Text>
+      </View>
       <Button title="Sign In" onPress={handleSignIn} />
       <Button title="Sign Up" onPress={handleSignUp} />
     </View>
@@ -85,6 +112,14 @@ const styles = StyleSheet.create({
   error: {
     color: 'red',
     marginBottom: 10,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  label: {
+    margin: 8,
   },
 });
 

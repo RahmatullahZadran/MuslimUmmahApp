@@ -14,7 +14,7 @@ import ProfileScreen from './components/Home/ProfileScreen';
 import MessageScreen from './components/Home/MessageScreen';
 import SignInScreen from './components/Home/SignInScreen'; 
 import SignUpScreen from './components/Home/SignUpScreen';
-
+import EditProfileScreen from './components/Home/EditProfileScreen';
 
 
 
@@ -38,6 +38,7 @@ const App = () => {
         <Stack.Screen name="MessageScreen" component={MessageScreen} options={{ title: 'Messages' }} />
         <Stack.Screen name="SignInScreen" component={SignInScreen} options={{ title: 'Messages' }} />
         <Stack.Screen name="SignUpScreen" component={SignUpScreen} options={{ title: 'Messages' }} />
+        <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
 
 
      
