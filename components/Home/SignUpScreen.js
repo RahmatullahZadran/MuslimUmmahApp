@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore'; // Import Firestore modules
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -25,11 +25,21 @@ const SignUpScreen = () => {
       setError('Passwords do not match');
       return;
     }
-
+  
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
-
+  
+        // Set display name
+        updateProfile(user, {
+          displayName: username,
+        }).then(() => {
+          // Profile updated successfully
+          setDisplayName(username); // Update the displayName state
+        }).catch((error) => {
+          console.error('Error updating profile:', error);
+        });
+  
         // Create user profile document in Firestore
         const userProfileRef = doc(db, 'users', user.uid);
         setDoc(userProfileRef, {
@@ -39,7 +49,7 @@ const SignUpScreen = () => {
         }).then(() => {
           // Registration and profile creation successful, navigate to SignInScreen
           navigation.navigate('SignInScreen');
-
+  
           // Remove any stored credentials if user signs up (optional)
           AsyncStorage.removeItem('userCredentials');
         }).catch((error) => {
@@ -50,6 +60,7 @@ const SignUpScreen = () => {
         setError(error.message);
       });
   };
+  
 
   return (
     <View style={styles.container}>
