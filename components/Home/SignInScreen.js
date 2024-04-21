@@ -82,8 +82,12 @@ const SignInScreen = () => {
         />
         <Text style={styles.label}>Keep Me Logged In</Text>
       </View>
-      <Button title="Sign In" onPress={handleSignIn} />
-      <Button title="Sign Up" onPress={handleSignUp} />
+      <View style={styles.buttonContainer}>
+      <Button style={styles.button} title="Sign In" onPress={handleSignIn} />
+ 
+      <Button style={styles.button} title="Sign Up" onPress={handleSignUp} />
+      </View>
+
     </View>
   );
 };
@@ -94,11 +98,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+
+    
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    height: 40,
+    
+    
+  },
+ 
   header: {
-    fontSize: 24,
+    fontSize: 29,
     fontWeight: 'bold',
     marginBottom: 20,
+
   },
   input: {
     width: '100%',
@@ -108,18 +124,36 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 10,
     paddingHorizontal: 10,
+    
+    backgroundColor: '#fff',
+    
   },
   error: {
     color: 'red',
     marginBottom: 10,
+
   },
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    width: '100%',
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor: '#fff',
+    
+   
+    paddingHorizontal: 10,
+    justifyContent: 'space-between',
+
   },
   label: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginLeft: 5,
     margin: 8,
+
   },
 });
 

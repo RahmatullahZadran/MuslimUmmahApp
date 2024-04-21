@@ -6,7 +6,7 @@ import { auth } from '../firebase/firebaseconfig';
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const [user, setUser] = useState(null); // State to hold user information
-
+  
   useEffect(() => {
     // Fetch user information when component mounts
     const unsubscribe = auth.onAuthStateChanged(currentUser => {

@@ -1,8 +1,11 @@
+
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore'; // Import Firestore modules
+import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore'; 
+
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const auth = getAuth();
@@ -16,7 +19,30 @@ const SignUpScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState(null);
 
-  const handleSignUp = () => {
+  const checkUsernameAvailability = async (username) => {
+    try {
+      // Check if the username exists in the 'usernames' collection
+      const usernameDoc = await getDoc(doc(db, 'usernames', username));
+      if (usernameDoc.exists()) {
+        return false; // Username already exists
+      }
+  
+      // Check if the username exists in the 'users' collection
+      const usersQuery = query(collection(db, 'users'), where('username', '==', username));
+      const userSnapshot = await getDocs(usersQuery);
+      if (!userSnapshot.empty) {
+        return false; // Username already exists
+      }
+  
+      return true; // Username is available
+    } catch (error) {
+      console.error('Error checking username availability:', error);
+      return false; // Assume username is unavailable in case of error
+    }
+  };
+  
+  
+  const handleSignUp = async () => {
     if (!username || !email || !password || !confirmPassword) {
       setError('All fields are required');
       return;
@@ -25,42 +51,41 @@ const SignUpScreen = () => {
       setError('Passwords do not match');
       return;
     }
-  
+
+    const isUsernameAvailable = await checkUsernameAvailability(username);
+    if (!isUsernameAvailable) {
+      setError('Username is not available');
+      return;
+    }
+
     createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
+      .then(async (userCredential) => {
         const user = userCredential.user;
-  
-        // Set display name
-        updateProfile(user, {
+
+        // Update user profile with displayName
+        await updateProfile(auth.currentUser, {
           displayName: username,
-        }).then(() => {
-          // Profile updated successfully
-          setDisplayName(username); // Update the displayName state
-        }).catch((error) => {
-          console.error('Error updating profile:', error);
         });
-  
+
         // Create user profile document in Firestore
         const userProfileRef = doc(db, 'users', user.uid);
-        setDoc(userProfileRef, {
+        await setDoc(userProfileRef, {
           username: username,
           email: email,
+          Quote: 'Quote',
           // Add other profile information here if needed
-        }).then(() => {
-          // Registration and profile creation successful, navigate to SignInScreen
-          navigation.navigate('SignInScreen');
-  
-          // Remove any stored credentials if user signs up (optional)
-          AsyncStorage.removeItem('userCredentials');
-        }).catch((error) => {
-          setError(error.message);
         });
+
+        // Registration and profile creation successful, navigate to SignInScreen
+        navigation.navigate('ProfileScreen', { user: user });
+
+        // Remove any stored credentials if user signs up (optional)
+        AsyncStorage.removeItem('userCredentials');
       })
       .catch(error => {
         setError(error.message);
       });
   };
-  
 
   return (
     <View style={styles.container}>

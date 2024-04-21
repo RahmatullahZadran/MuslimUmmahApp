@@ -1,78 +1,183 @@
-// ChatScreen.js
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, FlatList, StyleSheet, TextInput, Button, KeyboardAvoidingView, Platform } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { getFirestore, doc, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { firebaseApp } from '../firebase/firebaseconfig';
+import { getAuth } from 'firebase/auth';
 
-const ChatScreen = ({ route }) => {
-  const { threadId } = route.params;
+const db = getFirestore(firebaseApp);
+const auth = getAuth(firebaseApp);
+
+const ChatScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { chatId, username: receivingUsername } = route.params;
   const [messages, setMessages] = useState([]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [newMessage, setNewMessage] = useState('');
+  const [username, setUsername] = useState('');
+  const [userIds, setUserIds] = useState([]);
+  const flatListRef = useRef(null);
 
-  const sendMessage = () => {
-    if (inputMessage.trim() !== '') {
-      setMessages([...messages, inputMessage]);
-      setInputMessage('');
+  useEffect(() => {
+    console.log('Fetching messages for chat:', chatId);
+
+    const unsubscribe = onSnapshot(
+      query(collection(db, 'chats', chatId, 'messages'), orderBy('timestamp')),
+      (querySnapshot) => {
+        const fetchedMessages = [];
+        querySnapshot.forEach((doc) => {
+          fetchedMessages.push({ id: doc.id, ...doc.data() });
+        });
+        setMessages(fetchedMessages);
+        scrollToBottom();
+      }
+    );
+
+    return () => {
+      console.log('Cleaning up messages subscription');
+      unsubscribe();
+    };
+  }, [chatId]);
+
+  useEffect(() => {
+    console.log('Fetching user data for UID:', auth.currentUser.uid);
+
+    const unsubscribe = onSnapshot(doc(db, 'users', auth.currentUser.uid), (doc) => {
+      if (doc.exists()) {
+        console.log('User data fetched:', doc.data());
+        setUsername(doc.data().username);
+      } else {
+        console.log('User document does not exist');
+      }
+    }, (error) => {
+      console.error('Error fetching user data:', error);
+    });
+
+    return () => {
+      console.log('Cleaning up user data subscription');
+      unsubscribe();
+    };
+  }, [auth.currentUser.uid]);
+
+  useEffect(() => {
+    console.log('Fetching all user IDs');
+
+    const unsubscribe = onSnapshot(collection(db, 'users'), (querySnapshot) => {
+      const fetchedUserIds = [];
+      querySnapshot.forEach((doc) => {
+        fetchedUserIds.push(doc.id);
+      });
+      setUserIds(fetchedUserIds);
+    }, (error) => {
+      console.error('Error fetching user IDs:', error);
+    });
+
+    return () => {
+      console.log('Cleaning up user IDs subscription');
+      unsubscribe();
+    };
+  }, []);
+
+  const scrollToBottom = () => {
+    flatListRef.current.scrollToEnd({ animated: true });
+  };
+
+  const handleSend = async () => {
+    if (!newMessage.trim()) {
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, 'chats', chatId, 'messages'), {
+        content: newMessage,
+        senderId: auth.currentUser.uid,
+        timestamp: serverTimestamp(),
+      });
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
     }
   };
 
+  const renderItem = ({ item }) => (
+    <View style={[styles.messageContainer, { alignSelf: item.senderId === auth.currentUser.uid ? 'flex-end' : 'flex-start' }]}>
+      <Text style={[styles.messageText, { backgroundColor: item.senderId === auth.currentUser.uid ? '#e0e0e0' : '#4caf50' }]}>
+        {item.content}
+      </Text>
+    </View>
+  );
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Chat Thread {threadId}</Text>
-      <ScrollView style={styles.messageContainer}>
-        {messages.map((message, index) => (
-          <View key={index} style={styles.message}>
-            <Text>{message}</Text>
-          </View>
-        ))}
-      </ScrollView>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <View style={styles.header}>
+        <Text style={styles.headerText}>{receivingUsername}</Text>
+      </View>
+      
+      <FlatList
+        ref={flatListRef}
+        data={messages}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={styles.messagesContainer}
+        onContentSizeChange={scrollToBottom}
+      />
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
           placeholder="Type your message..."
-          value={inputMessage}
-          onChangeText={setInputMessage}
+          value={newMessage}
+          onChangeText={setNewMessage}
         />
-        <Button
-          title="Send"
-          onPress={sendMessage}
-          disabled={!inputMessage.trim()} // Disable button if inputMessage is empty or contains only whitespace
-        />
+        <Button title="Send" onPress={handleSend} />
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
   },
   header: {
-    fontSize: 24,
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    alignItems: 'center',
+  },
+  headerText: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 20,
+  },
+  messagesContainer: {
+    flexGrow: 1,
+    padding: 10,
   },
   messageContainer: {
-    flex: 1,
-    marginBottom: 20,
+    maxWidth: '80%',
+    marginVertical: 5,
   },
-  message: {
-    backgroundColor: '#f0f0f0',
+  messageText: {
     padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
+    borderRadius: 10,
+    fontSize: 16,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
   },
   input: {
     flex: 1,
+    marginRight: 10,
+    padding: 10,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginRight: 10,
+    borderRadius: 20,
   },
 });
 

@@ -1,3 +1,4 @@
+// EditProfileScreen.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Image, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -13,18 +14,27 @@ const EditProfileScreen = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [hashtag, setHashtag] = useState(user.hashtag || '');
   const [quote, setQuote] = useState(user.quote || '');
-  const [postTimestamp, setPostTimestamp] = useState(null); // State to hold post timestamp
 
-  const handleSaveProfile = () => {
-    // Capture the timestamp when the profile is saved
-    const timestamp = new Date().toISOString();
-    setPostTimestamp(timestamp);
+  const handleSaveProfile = async () => {
+    const userData = {
+      displayName: displayName,
+      email: email,
+      photoURL: selectedImage ? selectedImage.uri : null,
+      hashtag: hashtag,
+      quote: quote
+    };
 
-    // Here you can proceed with saving the profile data to Firestore
-    // updateUserProfileInFirestore({ displayName, email, selectedImage, hashtag, quote });
+    try {
+      await updateUserProfileInFirestore(user.uid, userData);
+      console.log('User profile updated successfully');
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+    }
+  };
 
-    // For demo purposes, log the data
-    console.log("Profile saved at:", timestamp);
+  const handleImageSelection = (image) => {
+    setSelectedImage(image);
   };
 
   return (
@@ -67,7 +77,6 @@ const EditProfileScreen = () => {
         multiline
       />
       <Button title="Save Profile" onPress={handleSaveProfile} />
-      {postTimestamp && <Text style={styles.timestamp}>Profile saved at: {postTimestamp}</Text>}
     </View>
   );
 };
@@ -103,10 +112,6 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     marginBottom: 10,
-  },
-  timestamp: {
-    marginTop: 10,
-    fontStyle: 'italic',
   },
 });
 
