@@ -17,7 +17,7 @@ import SignInScreen from './components/Home/SignInScreen';
 import SignUpScreen from './components/Home/SignUpScreen';
 import EditProfileScreen from './components/Home/EditProfileScreen';
 import PostDetailsScreen from './components/Home/PostDetailsScreen';
-import OtherProfileScreen from './components/Home/OtherProfileScreen';
+// import OtherProfileScreen from './components/Home/OtherProfileScreen';
 import ChatScreen from './components/Home/ChatScreen';
 
 const Stack = createStackNavigator();
