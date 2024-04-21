@@ -30,6 +30,9 @@ const ChatScreen = () => {
         });
         setMessages(fetchedMessages);
         scrollToBottom();
+      },
+      (error) => {
+        console.error('Error fetching messages:', error);
       }
     );
 

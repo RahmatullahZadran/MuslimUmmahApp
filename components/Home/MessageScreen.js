@@ -11,42 +11,69 @@ const auth = getAuth(firebaseApp);
 const MessageScreen = () => {
   const navigation = useNavigation();
   const [chats, setChats] = useState([]);
+  const [lastSeenTimestamp, setLastSeenTimestamp] = useState(null);
 
   useEffect(() => {
     console.log('Fetching chats for user:', auth.currentUser.uid);
-
+  
     const unsubscribe = onSnapshot(
       query(collection(db, 'chats'), where('participants', 'array-contains', auth.currentUser.uid)),
       async (querySnapshot) => {
         const fetchedChats = [];
-
+  
         for (const docRef of querySnapshot.docs) {
           const chatData = docRef.data();
           const otherUserId = chatData.participants.find(uid => uid !== auth.currentUser.uid);
-
+  
           if (otherUserId) {
             const userDoc = await getDoc(doc(db, 'users', otherUserId));
             const userData = userDoc.data();
             fetchedChats.push({
               id: docRef.id,
               username: userData.username,
+              lastMessage: chatData.lastMessage,
               unreadCount: chatData.unreadCount || 0,
             });
           }
         }
-
+  
+        // Sort chats based on unreadCount in descending order
+        fetchedChats.sort((a, b) => b.unreadCount - a.unreadCount);
+  
         setChats(fetchedChats);
       },
       (error) => {
         console.error('Error fetching chats:', error);
       }
     );
-
+  
     return () => {
       console.log('Cleaning up chats subscription');
       unsubscribe();
     };
   }, []);
+    
+  
+
+  useEffect(() => {
+    console.log('Fetching user data for UID:', auth.currentUser.uid);
+
+    const unsubscribe = onSnapshot(doc(db, 'users', auth.currentUser.uid), (doc) => {
+      if (doc.exists()) {
+        console.log('User data fetched:', doc.data());
+        setLastSeenTimestamp(doc.data().lastSeen ? doc.data().lastSeen.toDate() : null);
+      } else {
+        console.log('User document does not exist');
+      }
+    }, (error) => {
+      console.error('Error fetching user data:', error);
+    });
+
+    return () => {
+      console.log('Cleaning up user data subscription');
+      unsubscribe();
+    };
+  }, [auth.currentUser.uid]);
 
   const renderItem = ({ item }) => {
     const lastMessageTimestamp = item.lastMessage?.timestamp?.toDate();
@@ -78,7 +105,6 @@ const MessageScreen = () => {
   };
   
   
-
   return (
     <View style={styles.container}>
       <FlatList

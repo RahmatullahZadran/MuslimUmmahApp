@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getFirestore, query, collection, where, getDocs } from 'firebase/firestore';
@@ -11,43 +11,55 @@ const OtherProfileScreen = ({ route }) => {
   const { userProfile } = route.params;
   const navigation = useNavigation();
 
+  useEffect(() => {
+    // Cleanup function
+    return () => {
+      // Here, you can unsubscribe from any active Firestore subscriptions
+      // For example, if you have a subscription to listen for new messages, unsubscribe here
+      // If you are using `onSnapshot` or `getDocs` with `getDocsListener`, you can call `unsubscribe()` on those
+    };
+  }, []);
+
+  // Function to create or get chat ID between two users
+  const getOrCreateChatId = async (userId1, userId2) => {
+    const participants = [userId1, userId2].sort(); // Sort participant IDs
+  
+    // Check for an existing chat where both users are participants
+    const existingChatQuery = query(
+      collection(db, 'chats'),
+      where('participants', '==', participants)
+    );
+  
+    const existingChatSnapshot = await getDocs(existingChatQuery);
+  
+    if (!existingChatSnapshot.empty) {
+      // If an existing chat is found, return the existing chat's ID
+      return existingChatSnapshot.docs[0].id;
+    }
+  
+    // If no existing chat is found, create a new chat between the two users
+    const chatId = await createChat(userId1, userId2);
+    return chatId;
+  };
+
+  // Updated handleMessagePress function
   const handleMessagePress = async () => {
     try {
       const { userId, username } = userProfile;
-  
+
       if (!userId || !auth.currentUser.uid) {
         throw new Error('User ID is missing.');
       }
-  
-      const participants = [auth.currentUser.uid, userId].sort(); // Sort participant IDs
-  
-      // Check for an existing chat where both users are participants
-      const existingChatQuery = query(
-        collection(db, 'chats'),
-        where('participants', '==', participants)
-      );
-  
-      const existingChatSnapshot = await getDocs(existingChatQuery);
-  
-      if (!existingChatSnapshot.empty) {
-        // If an existing chat is found, navigate to the ChatScreen with the existing chat's ID and username
-        const existingChat = existingChatSnapshot.docs[0];
-        navigation.navigate('ChatScreen', { chatId: existingChat.id, username });
-        return;
-      }
-  
-      // If no existing chat is found, create a new chat between the current user and the selected user
-      const chatId = await createChat(auth.currentUser.uid, userId);
-  
-      // Navigate to the ChatScreen with the new chat's ID and username
+
+      const chatId = await getOrCreateChatId(auth.currentUser.uid, userId);
+
+      // Navigate to the ChatScreen with the chat's ID and username
       navigation.navigate('ChatScreen', { chatId, username });
     } catch (error) {
       console.error('Error navigating to chat:', error);
       alert('Error starting chat. Please try again.');
     }
   };
-  
-  
 
   return (
     <View style={styles.container}>
