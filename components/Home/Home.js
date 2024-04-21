@@ -194,7 +194,6 @@ const styles = StyleSheet.create({
   username: {
     fontSize: 17,
     fontWeight: 'bold',
-    textAlign: 'start',
     width: 170,
   
     // backgroundColor: 'blue',
@@ -214,7 +213,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   caption: {
-    textAlign: 'start',
     fontSize: 15,
     width: 300,
     marginLeft: 20,
