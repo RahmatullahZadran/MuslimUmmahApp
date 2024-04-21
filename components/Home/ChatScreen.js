@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, FlatList, StyleSheet, TextInput, Button, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { getFirestore, doc, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, updateDoc } from 'firebase/firestore';
 import { firebaseApp } from '../firebase/firebaseconfig';
 import { getAuth } from 'firebase/auth';
 
@@ -92,6 +92,7 @@ const ChatScreen = () => {
         content: newMessage,
         senderId: auth.currentUser.uid,
         timestamp: serverTimestamp(),
+        unread: true,
       });
       setNewMessage('');
     } catch (error) {
@@ -99,17 +100,24 @@ const ChatScreen = () => {
     }
   };
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item, index }) => (
     <View style={[styles.messageContainer, { alignSelf: item.senderId === auth.currentUser.uid ? 'flex-end' : 'flex-start' }]}>
       <Text style={[styles.messageText, { backgroundColor: item.senderId === auth.currentUser.uid ? '#e0e0e0' : '#4caf50' }]}>
         {item.content}
+      </Text>
+      {index === messages.length - 1 && item.unread && (
+        <Text style={styles.unreadIndicator}>Unread</Text>
+      )}
+      <Text style={styles.timestamp}>
+        {item.timestamp?.toDate().toLocaleTimeString()}
       </Text>
     </View>
   );
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : null}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       style={styles.container}
     >
       <View style={styles.header}>
@@ -163,6 +171,16 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     fontSize: 16,
+  },
+  unreadIndicator: {
+    fontSize: 12,
+    color: 'red',
+    marginTop: 5,
+  },
+  timestamp: {
+    fontSize: 12,
+    color: '#aaa',
+    marginTop: 5,
   },
   inputContainer: {
     flexDirection: 'row',

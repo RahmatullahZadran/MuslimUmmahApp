@@ -48,16 +48,36 @@ const MessageScreen = () => {
     };
   }, []);
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.chatItem} onPress={() => navigation.navigate('ChatScreen', { chatId: item.id, username: item.username })}>
-      <Text style={styles.chatUsername}>{item.username}</Text>
-      {item.unreadCount > 0 && (
-        <View style={styles.unreadIndicator}>
-          <Text style={styles.unreadText}>{item.unreadCount}</Text>
-        </View>
-      )}
-    </TouchableOpacity>
-  );
+  const renderItem = ({ item }) => {
+    const lastMessageTimestamp = item.lastMessage?.timestamp?.toDate();
+    const lastSeenTimestamp = auth.currentUser.lastSeen?.toDate(); // Assuming lastSeen is a field in the user document
+  
+    console.log('Last Message Timestamp:', lastMessageTimestamp);
+    console.log('Last Seen Timestamp:', lastSeenTimestamp);
+  
+    const isUpToDate = lastMessageTimestamp && lastSeenTimestamp ? lastMessageTimestamp <= lastSeenTimestamp : false;
+  
+    console.log('Is Up To Date:', isUpToDate);
+  
+    return (
+      <TouchableOpacity 
+        style={[
+          styles.chatItem, 
+          { backgroundColor: isUpToDate ? '#4caf50' : '#ff5252' }
+        ]} 
+        onPress={() => navigation.navigate('ChatScreen', { chatId: item.id, username: item.username })}
+      >
+        <Text style={styles.chatUsername}>{item.username}</Text>
+        {item.unreadCount > 0 && (
+          <View style={styles.unreadIndicator}>
+            <Text style={styles.unreadText}>{item.unreadCount}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
+  
+  
 
   return (
     <View style={styles.container}>
