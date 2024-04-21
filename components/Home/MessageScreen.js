@@ -28,17 +28,22 @@ const MessageScreen = () => {
           if (otherUserId) {
             const userDoc = await getDoc(doc(db, 'users', otherUserId));
             const userData = userDoc.data();
+            const lastMessage = chatData.messages?.[chatData.messages.length - 1];
             fetchedChats.push({
               id: docRef.id,
               username: userData.username,
-              lastMessage: chatData.lastMessage,
+              lastMessage: lastMessage,
               unreadCount: chatData.unreadCount || 0,
             });
           }
         }
   
-        // Sort chats based on unreadCount in descending order
-        fetchedChats.sort((a, b) => b.unreadCount - a.unreadCount);
+        // Sort chats based on the latest message timestamp in descending order
+        fetchedChats.sort((a, b) => {
+          const aTimestamp = a.lastMessage?.createdAt?.toDate() || new Date(0);
+          const bTimestamp = b.lastMessage?.createdAt?.toDate() || new Date(0);
+          return bTimestamp - aTimestamp;
+        });
   
         setChats(fetchedChats);
       },
@@ -53,8 +58,6 @@ const MessageScreen = () => {
     };
   }, []);
   
-  
-
   useEffect(() => {
     console.log('Fetching user data for UID:', auth.currentUser.uid);
 
@@ -76,21 +79,22 @@ const MessageScreen = () => {
   }, [auth.currentUser.uid]);
 
   const renderItem = ({ item }) => {
-    const lastMessageTimestamp = item.lastMessage?.timestamp?.toDate();
-    const lastSeenTimestamp = auth.currentUser.lastSeen?.toDate(); // Assuming lastSeen is a field in the user document
-  
+    const lastMessageTimestamp = item.lastMessage?.createdAt?.toDate();
+    const lastSeenTimestamp = lastSeenTimestamp?.toDate(); // Assuming lastSeen is a field in the user document
+    
+    console.log('Last Message:', item.lastMessage);
     console.log('Last Message Timestamp:', lastMessageTimestamp);
     console.log('Last Seen Timestamp:', lastSeenTimestamp);
-  
+    
     const isUpToDate = lastMessageTimestamp && lastSeenTimestamp ? lastMessageTimestamp <= lastSeenTimestamp : false;
-  
+    
     console.log('Is Up To Date:', isUpToDate);
-  
+    
     return (
       <TouchableOpacity 
         style={[
           styles.chatItem, 
-          { backgroundColor: isUpToDate ? '#4caf50' : '#ff5252' }
+          { backgroundColor: isUpToDate ? '#4caf50' : item.unreadCount > 0 ? '#ff5252' : '#fff' }
         ]} 
         onPress={() => navigation.navigate('ChatScreen', { chatId: item.id, username: item.username })}
       >
@@ -104,7 +108,7 @@ const MessageScreen = () => {
     );
   };
   
-  
+
   return (
     <View style={styles.container}>
       <FlatList

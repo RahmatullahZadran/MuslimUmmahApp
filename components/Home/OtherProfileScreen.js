@@ -22,25 +22,26 @@ const OtherProfileScreen = ({ route }) => {
 
   // Function to create or get chat ID between two users
   const getOrCreateChatId = async (userId1, userId2) => {
-    const participants = [userId1, userId2].sort(); // Sort participant IDs
-  
+    const participants = [userId1, userId2].sort().join('-'); // Create a unique key for the participants
+    
     // Check for an existing chat where both users are participants
     const existingChatQuery = query(
       collection(db, 'chats'),
-      where('participants', '==', participants)
+      where('participantsKey', '==', participants)
     );
-  
+    
     const existingChatSnapshot = await getDocs(existingChatQuery);
-  
+    
     if (!existingChatSnapshot.empty) {
       // If an existing chat is found, return the existing chat's ID
       return existingChatSnapshot.docs[0].id;
     }
-  
+    
     // If no existing chat is found, create a new chat between the two users
     const chatId = await createChat(userId1, userId2);
     return chatId;
   };
+  
 
   // Updated handleMessagePress function
   const handleMessagePress = async () => {

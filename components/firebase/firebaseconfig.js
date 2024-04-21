@@ -77,8 +77,12 @@ const uploadMessage = async (message) => {
 // Function to create a new chat document
 const createChat = async (userId1, userId2) => {
   try {
+    const participants = [userId1, userId2].sort();
+    const participantsKey = participants.join('-'); // Create a unique key for the participants
+    
     const chatDocRef = await addDoc(collection(firestore, 'chats'), {
-      participants: [userId1, userId2],
+      participants,
+      participantsKey, // Save the unique key
       createdAt: new Date(),
       messages: []
     });
