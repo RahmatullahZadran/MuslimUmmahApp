@@ -1,42 +1,102 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, Image } from 'react-native';
+import { View, Text, StyleSheet, Button, Image, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { getFirestore, collection, getDocs, where, query, addDoc } from 'firebase/firestore';
 import { auth } from '../firebase/firebaseconfig';
+
+
+const db = getFirestore();
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
-  const [user, setUser] = useState(null); // State to hold user information
-  
+  const [user, setUser] = useState(null); 
+  const [userPosts, setUserPosts] = useState([]); 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
-    // Fetch user information when component mounts
     const unsubscribe = auth.onAuthStateChanged(currentUser => {
       if (currentUser) {
-        // User is signed in, update user state
         setUser(currentUser);
+        fetchUserPosts(currentUser.uid);
       } else {
-        // User is not signed in, navigate to sign-in screen
         navigation.navigate('SignInScreen');
       }
     });
 
-    // Clean up listener when component unmounts
     return unsubscribe;
   }, []);
 
+  const fetchUserPosts = async (userId) => {
+    setLoading(true);
+    try {
+      console.log('Fetching posts for userId:', userId); // Debug log
+      const q = query(collection(db, 'posts'), where('userId', '==', userId));
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        console.log('No matching documents for userId:', userId); // Debug log
+        setLoading(false);
+        return;
+      }
+      const fetchedUserPosts = [];
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const timestamp = data.timestamp ? data.timestamp.toDate() : null;
+        fetchedUserPosts.push({ id: doc.id, ...data, timestamp });
+      });
+      fetchedUserPosts.sort((a, b) => b.timestamp - a.timestamp);
+      setUserPosts(fetchedUserPosts);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching user posts: ', error);
+      setLoading(false);
+    }
+  };
+  
+
+  const addPost = async (title, content, category) => {
+    try {
+      const currentUser = auth.currentUser;
+      const post = {
+        title,
+        content,
+        category,
+        timestamp: new Date(),
+        userId: currentUser.uid,
+        // Add other fields like comments, likes, etc.
+      };
+      const docRef = await addDoc(collection(db, 'posts'), post);
+      console.log("Post added with ID: ", docRef.id);
+    } catch (error) {
+      console.error("Error adding post: ", error);
+    }
+  };
+
   const handleProfileEdit = () => {
-    // Navigate to profile edit screen
     navigation.navigate('EditProfileScreen', { user });
   };
 
   const handleLogout = () => {
-    // Sign out the user
     auth.signOut().then(() => {
-      // Navigate to sign-in screen after successful logout
       navigation.navigate('SignInScreen');
     }).catch(error => {
       console.error("Error signing out: ", error);
     });
   };
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity onPress={() => navigation.navigate('PostDetailsScreen', { postId: item.id })}>
+      <View style={styles.postContainer}>
+        <Text style={styles.postTitle}>{item.title}</Text>
+        <Text style={styles.caption}>{item.content}</Text>
+        {/* Render other post details like likes, dislikes, etc. */}
+      </View>
+    </TouchableOpacity>
+  );
+  
+
+  if (!user) {
+    return <ActivityIndicator />;
+  }
 
   return (
     <View style={styles.container}>
@@ -44,15 +104,19 @@ const ProfileScreen = () => {
         <>
           <View style={styles.profileHeader}>
             <Image
-              source={{ uri: user.photoURL }} // Use user's profile image
+              source={{ uri: user.photoURL }}
               style={styles.profileImage}
             />
             <Text style={styles.username}>{user.displayName}</Text>
             <Text style={styles.email}>{user.email}</Text>
-            {/* Display hashtag and quote if available */}
-            {user.hashtag && <Text>#{user.hashtag}</Text>}
-            {user.quote && <Text>"{user.quote}"</Text>}
           </View>
+          <FlatList
+            data={userPosts}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{ flexGrow: 1, paddingTop: 20 }}
+            ListFooterComponent={loading && <ActivityIndicator />}
+          />
           <View style={styles.buttonContainer}>
             <Button title="Edit Profile" onPress={handleProfileEdit} />
             <Button title="Logout" onPress={handleLogout} />
@@ -66,9 +130,7 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#fff',
     padding: 20,
   },
   profileHeader: {
@@ -91,9 +153,24 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   buttonContainer: {
-    width: '100%',
+    marginTop: 20,
+  },
+  postContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 12,
+    marginBottom: 12,
+  },
+  postTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  caption: {
+    fontSize: 15,
   },
 });
 
 export default ProfileScreen;
-

@@ -5,7 +5,6 @@ import { getFirestore, doc, getDoc, collection, addDoc, getDocs, serverTimestamp
 import { firebaseApp } from '../firebase/firebaseconfig';
 import { getAuth, onAuthStateChanged } from 'firebase/auth'; // Import Firebase authentication modules
 
-
 const db = getFirestore(firebaseApp);
 const auth = getAuth(firebaseApp); // Initialize Firebase authentication
 
@@ -83,7 +82,6 @@ const PostDetailsScreen = () => {
       console.error('Error adding comment:', error);
     }
   };
-  
 
   const navigateToUserProfile = async (clickedUsername) => {
     try {
@@ -104,7 +102,6 @@ const PostDetailsScreen = () => {
       console.error('Error fetching user profile:', error);
     }
   };
-  
 
   if (loading) {
     return (
@@ -116,36 +113,38 @@ const PostDetailsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.username}>{post.displayName}</Text>
+      <TouchableOpacity onPress={() => navigateToUserProfile(post.username)}>
+        <Text style={styles.username}>{post.displayName}</Text>
+      </TouchableOpacity>
       <Text style={styles.title}>{post.title}</Text>
       <Text style={styles.content}>{post.content}</Text>
-
+  
       <FlatList
         data={comments}
         keyExtractor={(item, index) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => handleReplyToComment(item.id)}>
-          <View style={[styles.commentContainer, repliedCommentId === item.id && styles.repliedCommentContainer]}>
-            <Text>{item.text}</Text>
-            <TouchableOpacity onPress={() => navigateToUserProfile(item.username)}>
-              <Text style={styles.commentUsername}>{item.username}</Text>
-            </TouchableOpacity>
-            {item.timestamp && (
-              <Text style={styles.commentTimestamp}>
-                {item.timestamp.toDate().toString()}
-              </Text>
-            )}
-          </View>
-          {/* Display replied comment */}
-          {repliedCommentId === item.id && (
-            <View style={[styles.commentContainer, styles.repliedCommentContainer]}>
-              <Text style={styles.repliedCommentText}>Your reply here</Text>
+            <View style={[styles.commentContainer, repliedCommentId === item.id && styles.repliedCommentContainer]}>
+              <Text>{item.text}</Text>
+              <TouchableOpacity onPress={() => navigateToUserProfile(item.username)}>
+                <Text style={styles.commentUsername}>{item.username}</Text>
+              </TouchableOpacity>
+              {item.timestamp && (
+                <Text style={styles.commentTimestamp}>
+                  {item.timestamp.toDate().toString()}
+                </Text>
+              )}
             </View>
-          )}
-        </TouchableOpacity>
+            {/* Display replied comment */}
+            {repliedCommentId === item.id && (
+              <View style={[styles.commentContainer, styles.repliedCommentContainer]}>
+                <Text style={styles.repliedCommentText}>Your reply here</Text>
+              </View>
+            )}
+          </TouchableOpacity>
         )}
       />
-
+  
       <View style={styles.commentFormContainer}>
         <TextInput
           style={styles.commentInput}
@@ -173,6 +172,16 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
+    textDecorationLine: 'underline',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  content: {
+    fontSize: 16,
+    marginBottom: 20,
   },
   commentContainer: {
     backgroundColor: '#f0f0f0',

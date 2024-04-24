@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { firebaseApp } from '../firebase/firebaseconfig';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -13,6 +13,8 @@ const AddPostScreen = () => {
   const [url, setUrl] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null); // State to track selected category
   const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState(''); // State to hold username
+  const [isPosting, setIsPosting] = useState(false); // State to track post submission
 
   useEffect(() => {
     // Subscribe to the authentication state changes
@@ -20,9 +22,11 @@ const AddPostScreen = () => {
       if (user) {
         // User is signed in
         setDisplayName(user.displayName);
+        setUsername(user.displayName); // Set username
       } else {
         // No user is signed in
         setDisplayName('');
+        setUsername(''); // Set username
       }
     });
 
@@ -35,7 +39,12 @@ const AddPostScreen = () => {
   };
 
   const handleSubmit = async () => {
+    setIsPosting(true); // Set isPosting to true while posting
+  
     try {
+      const currentUser = auth.currentUser; // Get the current authenticated user
+      const userId = currentUser ? currentUser.uid : ''; // Get the UID of the current user
+  
       // Add the post data to Firestore collection with a timestamp
       const docRef = await addDoc(collection(db, 'posts'), {
         title: title,
@@ -44,17 +53,25 @@ const AddPostScreen = () => {
         category: selectedCategory,
         timestamp: serverTimestamp(), // Include server-side timestamp
         displayName: displayName, // Set the displayName (username)
+        username: username, // Set the username
+        userId: userId, // Add userId field
         // You can add more fields as needed
       });
+  
       console.log('Post added with ID: ', docRef.id);
-
+  
       // Reset the input fields after submission
       setTitle('');
       setContent('');
       setUrl('');
-      setSelectedCategory(null); // Reset selected category
+      setSelectedCategory(null);
+      
+      Alert.alert('Success', 'Post added successfully!'); // Display success message
     } catch (error) {
       console.error('Error adding post: ', error);
+      Alert.alert('Error', 'Error adding post. Please try again.'); // Display error message
+    } finally {
+      setIsPosting(false); // Reset isPosting after posting
     }
   };
 
@@ -112,7 +129,7 @@ const AddPostScreen = () => {
       <Button
         title="Submit"
         onPress={handleSubmit}
-        disabled={!title || !content || !selectedCategory} // Disable button if title, content, or category is empty
+        disabled={!title || !content || !selectedCategory || isPosting} // Disable button if title, content, or category is empty or posting
       />
     </View>
   );
