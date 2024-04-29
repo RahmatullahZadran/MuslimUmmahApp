@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TextInput, Button, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TextInput, Button, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { getFirestore, doc, getDoc, collection, addDoc, getDocs, serverTimestamp } from 'firebase/firestore';
 import { firebaseApp } from '../firebase/firebaseconfig';
@@ -18,7 +18,14 @@ const PostDetailsScreen = () => {
   const [newComment, setNewComment] = useState('');
   const [username, setUsername] = useState(''); // State to hold the username
   const [repliedCommentId, setRepliedCommentId] = useState(null); // State to track replied comment id
+  const [commenting, setCommenting] = useState(false); // State to track commenting status
 
+  const handleReplyToComment = (commentId) => {
+    // Toggle repliedCommentId
+    setRepliedCommentId(commentId === repliedCommentId ? null : commentId);
+  };
+  
+  
   useEffect(() => {
     // Fetch current user's information when component mounts
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -113,37 +120,68 @@ const PostDetailsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigateToUserProfile(post.username)}>
-        <Text style={styles.username}>{post.displayName}</Text>
-      </TouchableOpacity>
-      <Text style={styles.title}>{post.title}</Text>
-      <Text style={styles.content}>{post.content}</Text>
+      <ScrollView contentContainerStyle={styles.postContainer}>
+        <TouchableOpacity onPress={() => navigateToUserProfile(post.username)}>
+          <Text style={[styles.username, commenting && styles.smallText]}>{post.displayName}</Text>
+        </TouchableOpacity>
+        <Text style={[styles.title, commenting && styles.smallText]}>{post.title}</Text>
+        <Text style={[styles.content, commenting && styles.smallText]}>{post.content}</Text>
+      </ScrollView>
   
       <FlatList
-        data={comments}
-        keyExtractor={(item, index) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => handleReplyToComment(item.id)}>
-            <View style={[styles.commentContainer, repliedCommentId === item.id && styles.repliedCommentContainer]}>
-              <Text>{item.text}</Text>
-              <TouchableOpacity onPress={() => navigateToUserProfile(item.username)}>
-                <Text style={styles.commentUsername}>{item.username}</Text>
-              </TouchableOpacity>
-              {item.timestamp && (
-                <Text style={styles.commentTimestamp}>
-                  {item.timestamp.toDate().toString()}
-                </Text>
-              )}
-            </View>
-            {/* Display replied comment */}
-            {repliedCommentId === item.id && (
-              <View style={[styles.commentContainer, styles.repliedCommentContainer]}>
-                <Text style={styles.repliedCommentText}>Your reply here</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+  data={comments.filter(comment => !comment.repliedCommentId)} // Filter out replies
+  keyExtractor={(item, index) => item.id}
+  renderItem={({ item }) => (
+    <TouchableOpacity onPress={() => handleReplyToComment(item.id)}> 
+      <View style={[styles.commentContainer, repliedCommentId === item.id && styles.repliedCommentContainer]}>
+        {/* Username at the top in bold */}
+        <TouchableOpacity onPress={() => navigateToUserProfile(item.username)}>
+          <Text style={[styles.commentUsername, styles.boldText]}>{item.username}</Text>
+        </TouchableOpacity>
+        <Text>{item.text}</Text>
+        {item.timestamp && (
+          <Text style={styles.commentTimestamp}>
+            {item.timestamp.toDate().toString()}
+          </Text>
         )}
-      />
+        {/* Show number of replies */}
+        {comments.filter(reply => reply.repliedCommentId === item.id).length > 0 && (
+          <Text style={styles.repliesCount}>
+            {comments.filter(reply => reply.repliedCommentId === item.id).length} replies
+          </Text>
+        )}
+      </View>
+      {/* Display replies */}
+      {repliedCommentId === item.id && (
+        <View style={[styles.commentContainer, styles.repliedCommentContainer]}>
+          <Text style={styles.repliedCommentText}>Replies:</Text>
+          {/* Map through replies and display them */}
+          {comments.map((reply) => {
+            if (reply.repliedCommentId === item.id) {
+              return (
+                <View style={styles.replyContainer} key={reply.id}>
+                  {/* Username at the top in bold */}
+                  <TouchableOpacity onPress={() => navigateToUserProfile(reply.username)}>
+                    <Text style={[styles.commentUsername, styles.boldText]}>{reply.username}</Text>
+                  </TouchableOpacity>
+                  <Text>{reply.text}</Text>
+                  {reply.timestamp && (
+                    <Text style={styles.commentTimestamp}>
+                      {reply.timestamp.toDate().toString()}
+                    </Text>
+                  )}
+                </View>
+              );
+            }
+          })}
+        </View>
+      )}
+    </TouchableOpacity>
+  )}
+/>
+
+
+
   
       <View style={styles.commentFormContainer}>
         <TextInput
@@ -151,6 +189,8 @@ const PostDetailsScreen = () => {
           placeholder="Add a comment..."
           value={newComment}
           onChangeText={setNewComment}
+          onFocus={() => setCommenting(true)}
+          onBlur={() => setCommenting(false)}
         />
         <Button title="Comment" onPress={handleAddComment} />
       </View>
@@ -169,19 +209,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   username: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
-    textDecorationLine: 'underline',
+    fontWeight: 'bold',
+    
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 1,
+    textAlign: 'center',
   },
   content: {
     fontSize: 16,
     marginBottom: 20,
+  },
+  postContainer: {
+    flexGrow: 1,
+    paddingBottom: 20, // Adjust as needed
   },
   commentContainer: {
     backgroundColor: '#f0f0f0',
@@ -209,6 +255,9 @@ const styles = StyleSheet.create({
   repliedCommentText: {
     fontStyle: 'italic',
     color: '#777',
+  },
+  smallText: {
+    fontSize: 14,
   },
 });
 

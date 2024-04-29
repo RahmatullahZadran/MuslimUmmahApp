@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { getFirestore, collection, getDocs, query, limit } from 'firebase/firestore'; // Corrected imports
+import { getFirestore, collection, getDocs, query, where, limit } from 'firebase/firestore'; // Corrected imports
 import { firebaseApp } from '../firebase/firebaseconfig';
 
 const db = getFirestore(firebaseApp);
@@ -32,13 +32,13 @@ const Home = () => {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        const q = query(collection(db, 'posts'), limit(page * 15)); // Corrected query construction
+        const q = query(collection(db, 'posts'), where('status', '==', 'approved'), limit(page * 15)); // Filter approved posts
         const querySnapshot = await getDocs(q);
         const fetchedPosts = [];
         querySnapshot.forEach(doc => {
           const data = doc.data();
           const timestamp = data.timestamp ? data.timestamp.toDate() : null;
-          fetchedPosts.push({ id: doc.id, ...data, timestamp });
+          fetchedPosts.push({ id: doc.id, ...data, timestamp, truncatedContent: truncateContent(data.content) });
         });
         fetchedPosts.sort((a, b) => b.timestamp - a.timestamp);
         setPosts(fetchedPosts);
@@ -55,6 +55,14 @@ const Home = () => {
     setPage(page => page + 1); // Load more when end is reached
   };
 
+  const truncateContent = (content) => {
+    // Split content into sentences
+    const sentences = content.split(/[.!?]/);
+    // Take first 5 sentences and join them back
+    const truncatedContent = sentences.slice(0, 5).join('. ') + '.';
+    return truncatedContent;
+  };
+
   const renderItem = ({ item, index }) => (
     <TouchableOpacity onPress={() => navigation.navigate('PostDetailsScreen', { postId: item.id })}>
       <View style={[styles.postContainer, index !== 0 && styles.postContainerMarginTop]}>
@@ -64,7 +72,12 @@ const Home = () => {
           <Text style={styles.category}>{item.category}</Text>
         </View>
         <Text style={styles.postTitle}>{item.title}</Text>
-        <Text style={styles.caption}>{item.content}</Text>
+        <View style={styles.contentContainer}>
+          <Text style={styles.caption}>{item.truncatedContent}</Text>
+          <TouchableOpacity style={styles.expandButton} onPress={() => navigation.navigate('PostDetailsScreen', { postId: item.id })}>
+            {/* <Text style={styles.expandText}>Read More</Text> */}
+          </TouchableOpacity>
+        </View>
         {renderLikesAndDislikes(item)}
 
         <Text style={styles.timestamp}>{item.timestamp ? item.timestamp.toLocaleDateString() : ''}</Text>
@@ -222,6 +235,16 @@ const styles = StyleSheet.create({
     marginLeft: 250,
     marginTop: 25,
     marginBottom: -25,
+  },
+  contentContainer: {
+    height: 60, // Set the fixed height for the content
+  },
+  expandButton: {
+    marginTop: 8,
+  },
+  expandText: {
+    color: 'blue',
+    textDecorationLine: 'underline',
   },
 });
 

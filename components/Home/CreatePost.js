@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { View, Text, TextInput, Button, StyleSheet, Alert, FlatList } from 'react-native';
+import { getFirestore, collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { firebaseApp } from '../firebase/firebaseconfig';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
@@ -46,7 +46,7 @@ const AddPostScreen = () => {
       const userId = currentUser ? currentUser.uid : ''; // Get the UID of the current user
   
       // Add the post data to Firestore collection with a timestamp
-      const docRef = await addDoc(collection(db, 'posts'), {
+      await addDoc(collection(db, 'posts'), {
         title: title,
         content: content,
         url: url,
@@ -55,10 +55,9 @@ const AddPostScreen = () => {
         displayName: displayName, // Set the displayName (username)
         username: username, // Set the username
         userId: userId, // Add userId field
+        status: 'pending', // Set status to pending
         // You can add more fields as needed
       });
-  
-      console.log('Post added with ID: ', docRef.id);
   
       // Reset the input fields after submission
       setTitle('');
@@ -66,7 +65,7 @@ const AddPostScreen = () => {
       setUrl('');
       setSelectedCategory(null);
       
-      Alert.alert('Success', 'Post added successfully!'); // Display success message
+      Alert.alert('Success', 'Post added successfully! It will appear after approval.'); // Display success message
     } catch (error) {
       console.error('Error adding post: ', error);
       Alert.alert('Error', 'Error adding post. Please try again.'); // Display error message
@@ -75,35 +74,31 @@ const AddPostScreen = () => {
     }
   };
 
+  // Array of categories
+  const categories = [
+    { id: '2', title: 'Marriage' },
+    { id: '4', title: 'General' },
+    { id: '5', title: 'Potential' },
+    { id: '6', title: 'Advice' },
+    { id: '7', title: 'Pre Nikah' },
+    // Add more categories as needed
+  ];
+
   return (
-    <View style={styles.container}>
-      <View style={styles.categoryContainer}>
-        <CategoryButton
-          title="Category"
-          onPress={() => handleCategorySelection(null)}
-          isSelected={selectedCategory === null}
-        />
-        <CategoryButton
-          title="Marriage"
-          onPress={() => handleCategorySelection('marriage')}
-          isSelected={selectedCategory === 'marriage'}
-        />
-        <CategoryButton
-          title="Meme"
-          onPress={() => handleCategorySelection('meme')}
-          isSelected={selectedCategory === 'meme'}
-        />
-        <CategoryButton
-          title="General"
-          onPress={() => handleCategorySelection('general')}
-          isSelected={selectedCategory === 'general'}
-        />
-        <CategoryButton
-          title="Potential"
-          onPress={() => handleCategorySelection('potential')}
-          isSelected={selectedCategory === 'potential'}
-        />
-      </View>
+    <View style={styles.containers}>
+      <FlatList
+        horizontal
+        data={categories}
+        renderItem={({ item }) => (
+          <CategoryButton
+            title={item.title}
+            onPress={() => handleCategorySelection(item.title === 'Category' ? null : item.title)}
+            isSelected={selectedCategory === item.title}
+          />
+        )}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.categoryContainer}
+      />
       <Text style={styles.title}>Add New Post</Text>
 
       <TextInput
@@ -146,8 +141,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   categoryContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    minHeight: 40, // Adjust the height as needed
     marginBottom: 10,
   },
   title: {

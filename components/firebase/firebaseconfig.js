@@ -28,6 +28,11 @@ const firestore = getFirestore(firebaseApp);
 
 // Function to handle user sign-in
 const signIn = (email, password) => {
+  // Validate email and password
+  if (!email || !password) {
+    throw new Error("Email and password are required.");
+  }
+
   return signInWithEmailAndPassword(auth, email, password)
     .then(() => {
       // Navigate to home screen or any other screen
@@ -38,8 +43,14 @@ const signIn = (email, password) => {
     });
 };
 
+
 // Function to handle user sign-up
 const signUp = (email, password) => {
+  // Validate email and password
+  if (!email || !password) {
+    throw new Error("Email and password are required.");
+  }
+
   return createUserWithEmailAndPassword(auth, email, password)
     .then(() => {
       // Navigate to additional setup screen or home screen

@@ -14,7 +14,7 @@ const Homescreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}>Muslim Ummah App</Text>
+      <Text style={styles.headerText}></Text>
 
       {/* Content section */}
       <View style={styles.contentContainer}>
@@ -119,13 +119,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerText: {
-    fontSize: 24,
+    fontSize: 9,
     fontWeight: 'bold',
     textAlign: 'center',
     marginTop: 0,
     backgroundColor: 'black',
     color: 'white',
     padding: 10,
+    backgroundColor: 'white',
   },
   contentContainer: {
     flex: 1,
