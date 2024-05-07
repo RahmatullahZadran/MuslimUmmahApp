@@ -85,13 +85,16 @@ const Home = () => {
   };
 
   const renderCategoryButton = (category) => (
-    <Button
+    <TouchableOpacity
       key={category}
-      title={category}
       onPress={() => handleCategorySelection(category)}
-      color={selectedCategory === category ? 'red' : 'black'}
-      style={styles.categoryButton}
-    />
+      style={[
+        styles.categoryButton,
+        selectedCategory === category && styles.selectedCategoryButton,
+      ]}
+    >
+      <Text style={styles.categoryButtonText}>{category}</Text>
+    </TouchableOpacity>
   );
   
 
@@ -155,11 +158,11 @@ const styles = StyleSheet.create({
       flexDirection: 'row',
       paddingVertical: 10,
       position: 'absolute',
-      top: 650,
+      top: 630,
       left: 0,
       right: 0,
       backgroundColor: '#fff',
-      zIndex: 1, // Ensure the category container is above other content
+      zIndex: 1, 
     },
   header: {
     position: 'absolute',
@@ -172,6 +175,22 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
     alignItems: 'center',
     zIndex: 1,
+  },
+  categoryButton: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: 'black',
+    borderRadius: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    margin: 5,
+  },
+  selectedCategoryButton: {
+    backgroundColor: 'blue',
+  },
+  categoryButtonText: {
+    fontSize: 16,
+    color: 'black',
   },
   logo: {
     fontSize: 24,
