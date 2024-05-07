@@ -14,7 +14,7 @@ const Homescreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}></Text>
+      {/* <Text style={styles.headerText}></Text> */}
 
       {/* Content section */}
       <View style={styles.contentContainer}>
