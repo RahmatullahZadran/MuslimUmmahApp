@@ -55,12 +55,12 @@ const EditProfileScreen = () => {
         value={hashtag}
         onChangeText={setHashtag}
       />
-      <TextInput
+      {/* <TextInput
         style={styles.input}
         placeholder="Display Name"
         value={displayName}
         onChangeText={setDisplayName}
-      />
+      /> */}
       <TextInput
         style={styles.input}
         placeholder="Email"

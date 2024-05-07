@@ -14,31 +14,28 @@ const MessageScreen = () => {
   const [lastSeenTimestamp, setLastSeenTimestamp] = useState(null);
 
   useEffect(() => {
-    console.log('Fetching chats for user:', auth.currentUser.uid);
-  
     const fetchChatsAndMessages = async (docs) => {
       const newChats = [];
-  
+
       await Promise.all(docs.map(async (docRef) => {
         const chatData = docRef.data();
-        console.log("Chat Data:", chatData);
-  
+
         const otherUserId = chatData.participants.find(uid => uid !== auth.currentUser.uid);
-  
+
         if (otherUserId) {
           const userDoc = await getDoc(doc(db, 'users', otherUserId));
           const userData = userDoc.data();
-  
+
           // Fetch messages for the current chat
           const messagesQuery = query(collection(db, 'chats', docRef.id, 'messages'));
           const messagesSnapshot = await getDocs(messagesQuery);
           const messagesData = messagesSnapshot.docs.map(doc => doc.data());
-  
+
           // Find the latest message based on timestamp
           const latestMessage = messagesData.reduce((prev, current) => (
             prev.timestamp?.toDate() > current.timestamp?.toDate() ? prev : current
           ), {});
-  
+
           newChats.push({
             id: docRef.id,
             username: userData.username,
@@ -47,13 +44,13 @@ const MessageScreen = () => {
           });
         }
       }));
-  
+
       // Filter down the chats if needed
       const filteredChats = newChats.filter(chat => chat.lastMessage && chat.lastMessage.timestamp);
-  
+
       // Merge new chats with existing chats (local data)
       setChats(prevChats => [...filteredChats, ...prevChats]);
-  
+
       // Sort chats based on the latest message timestamp in descending order
       setChats(prevChats => prevChats.sort((a, b) => {
         const aTimestamp = a.lastMessage?.timestamp?.toDate() || new Date(0);
@@ -61,7 +58,7 @@ const MessageScreen = () => {
         return bTimestamp - aTimestamp;
       }));
     };
-  
+
     const unsubscribe = onSnapshot(
       query(collection(db, 'chats'), where('participants', 'array-contains', auth.currentUser.uid)),
       (querySnapshot) => {
@@ -71,48 +68,31 @@ const MessageScreen = () => {
         console.error('Error fetching chats:', error);
       }
     );
-  
+
     return () => {
-      console.log('Cleaning up chats subscription');
       unsubscribe();
     };
   }, []);
-  
-  
-  
-  
-  
-  
-  
-  useEffect(() => {
-    console.log('Fetching user data for UID:', auth.currentUser.uid);
 
+  useEffect(() => {
     const unsubscribe = onSnapshot(doc(db, 'users', auth.currentUser.uid), (doc) => {
       if (doc.exists()) {
-        console.log('User data fetched:', doc.data());
         setLastSeenTimestamp(doc.data().lastSeen ? doc.data().lastSeen.toDate() : null);
-      } else {
-        console.log('User document does not exist');
       }
     }, (error) => {
       console.error('Error fetching user data:', error);
     });
 
     return () => {
-      console.log('Cleaning up user data subscription');
       unsubscribe();
     };
-  }, [auth.currentUser.uid]);
+  }, []);
 
   const renderItem = ({ item }) => {
-    // Log the entire messages array for debugging
-    console.log("Messages:", item.lastMessage);
-  
     const lastMessageTimestamp = item.lastMessage?.timestamp?.toDate();
-    const lastSeenTimestampValue = lastSeenTimestamp?.toDate(); // Assuming lastSeen is a field in the user document
-  
+    const lastSeenTimestampValue = lastSeenTimestamp?.toDate();
     const isUpToDate = lastMessageTimestamp && lastSeenTimestampValue ? lastMessageTimestamp <= lastSeenTimestampValue : false;
-  
+
     return (
       <TouchableOpacity 
         style={[

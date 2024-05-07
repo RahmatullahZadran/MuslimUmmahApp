@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Button, ScrollView } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { getFirestore, collection, getDocs, query, where, limit } from 'firebase/firestore';
@@ -77,8 +77,6 @@ const Home = () => {
   );
 
   const handleCategorySelection = (category) => {
-    //add backround color to all button
-    
     setSelectedCategory(category === 'All' ? null : category); 
 
     setPage(1); // Reset page when category changes
@@ -96,7 +94,12 @@ const Home = () => {
       <Text style={styles.categoryButtonText}>{category}</Text>
     </TouchableOpacity>
   );
-  
+
+  const renderFooter = () => {
+    return loading ? (
+      <ActivityIndicator style={styles.loadingIndicator} />
+    ) : null;
+  };
 
   return (
     <View style={styles.container}>
@@ -106,7 +109,7 @@ const Home = () => {
         keyExtractor={(item) => item.id}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={loading && <ActivityIndicator />}
+        ListFooterComponent={renderFooter}
         contentContainerStyle={{ paddingBottom: 50 }}
       />
       <ScrollView horizontal={true} style={styles.categoryContainer}>
@@ -148,22 +151,21 @@ const Home = () => {
 };
 
 const styles = StyleSheet.create({
- 
-    container: {
-      flex: 1,
-      backgroundColor: '#fff',
-      position: 'relative', // Ensure the container is the positioning context for the absolute position of category container
-    },
-    categoryContainer: {
-      flexDirection: 'row',
-      paddingVertical: 10,
-      position: 'absolute',
-      top: 630,
-      left: 0,
-      right: 0,
-      backgroundColor: '#fff',
-      zIndex: 1, 
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    position: 'relative', // Ensure the container is the positioning context for the absolute position of category container
+  },
+  categoryContainer: {
+    flexDirection: 'row',
+    paddingVertical: 10,
+    position: 'absolute',
+    top: 630,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    zIndex: 1, 
+  },
   header: {
     position: 'absolute',
     top: 0,
@@ -277,11 +279,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 4,
   },
-  // selectedCategoryButton: {
-  //   fontWeight: 'bold',
-  //   backgroundColor: 'blue',
-    
-  // },  
   caption: {
     fontSize: 15,
     width: 300,
@@ -302,6 +299,9 @@ const styles = StyleSheet.create({
   expandText: {
     color: 'blue',
     textDecorationLine: 'underline',
+  },
+  loadingIndicator: {
+    marginVertical: 20,
   },
 });
 

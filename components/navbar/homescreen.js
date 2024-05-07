@@ -119,14 +119,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerText: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontSize: 0,
     marginTop: 0,
-    backgroundColor: 'black',
-    color: 'white',
-    padding: 10,
     backgroundColor: 'white',
+    height: 30,
   },
   contentContainer: {
     flex: 1,
